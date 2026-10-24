@@ -1,6 +1,7 @@
 from aiogram import Bot, Dispatcher, types
 from aiogram.filters import CommandStart, Command
 import asyncio
+from aiohttp import web
 from aiogram.enums import ParseMode
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, Message, ReplyKeyboardRemove
 from dotenv import find_dotenv, load_dotenv
@@ -280,7 +281,30 @@ async def start_cmd(message: types.Message):
     await message.answer('Давайте начнем готовить вкусный кофе! Заходите в Меню и выберите тип кофе, который хотите приготовить.', reply_markup=main_keyboard)
 
 
-async def main():
-    await dp.start_polling(bot, drop_pending_updates=True)
+async def health(request):
+    return web.Response(text="OK")
 
-asyncio.run(main())
+
+async def main():
+    app = web.Application()
+    app.router.add_get("/", health)
+    app.router.add_get("/health", health)
+
+    runner = web.AppRunner(app)
+    await runner.setup()
+
+    port = int(os.environ.get("PORT", "10000"))
+    site = web.TCPSite(runner, "0.0.0.0", port)
+    await site.start()
+
+    print(f"HTTP-сервер запущен на порту {port}")
+
+    try:
+        await dp.start_polling(bot, drop_pending_updates=True)
+    finally:
+        await runner.cleanup()
+        await bot.session.close()
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
