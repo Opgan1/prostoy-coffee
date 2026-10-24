@@ -8,7 +8,7 @@ import os
 
 load_dotenv(find_dotenv())
 
-bot = Bot(token=os.findenv("BOT_TOKEN"))
+bot = Bot(token=os.getenv("BOT_TOKEN"))
 dp = Dispatcher()
 
 main_keyboard = ReplyKeyboardMarkup(
